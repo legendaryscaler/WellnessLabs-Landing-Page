@@ -11477,17 +11477,14 @@ html.wf-inactive {
         </style>
 
         <script>
-        // Shopify checkout integration for josephmd.co
+        // Shopify checkout integration via postMessage to parent
         (function() {
-          const STORE_URL = 'https://josephmd.co';
-
-          // Map radio button values to Shopify variant IDs
           const VARIANT_MAP = {
             // Subscription products
             '5': '44814201716806',  // Buy One - 1 Pack
             '6': '44814201749574',  // Buy 2, Get 1 FREE - 3 Pack
             '7': '44814201782342',  // Buy 3, Get 2 FREE - 5 Pack
-            // One-time products (use same variants)
+            // One-time products
             '2': '44814201716806',  // Buy One - 1 Pack
             '3': '44814201749574',  // Buy 2, Get 1 FREE - 3 Pack
             '4': '44814201782342',  // Buy 3, Get 2 FREE - 5 Pack
@@ -11496,43 +11493,37 @@ html.wf-inactive {
           function getSelectedVariantId() {
             const checked = document.querySelector('input.fk-product-radio:checked');
             if (!checked) return null;
-            // Try variantvalue attribute first, fall back to value
             var key = checked.getAttribute('variantvalue') || checked.value;
             return VARIANT_MAP[key] || null;
           }
 
-          function redirectToCheckout() {
+          function addToCart() {
             var variantId = getSelectedVariantId();
             if (!variantId) {
               alert('Please select a product option.');
               return;
             }
-            // Redirect to Shopify cart permalink -> straight to checkout
-            window.top.location.href = STORE_URL + '/cart/' + variantId + ':1';
+            // Send message to parent Shopify page to submit the cart form
+            window.parent.postMessage({ type: 'addToCart', variantId: variantId }, '*');
           }
 
-          // Override the Add to Cart button
           document.addEventListener('DOMContentLoaded', function() {
-            // Main Add to Cart button (btn-one-style)
             var btns = document.querySelectorAll('.btn-one-style, .add-to-cart-button, [data-text-value="Add To Cart"]');
             btns.forEach(function(btn) {
-              // Remove existing onclick
               btn.removeAttribute('onclick');
               btn.setAttribute('action', '');
               btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                redirectToCheckout();
+                addToCart();
               });
             });
 
-            // Also handle the route function globally
             window.route = function(e) {
               if (e) e.preventDefault();
-              redirectToCheckout();
+              addToCart();
             };
 
-            // Handle offer box clicks to update selected radio
             var offerBoxes = document.querySelectorAll('.pricing-product-box');
             offerBoxes.forEach(function(box) {
               box.addEventListener('click', function() {
