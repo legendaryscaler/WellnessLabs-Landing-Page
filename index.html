@@ -11496,7 +11496,12 @@ html.wf-inactive {
             offerBoxes.forEach(function(box) {
               box.addEventListener('click', function() {
                 var radio = box.querySelector('input[type="radio"]');
-                if (radio) radio.checked = true;
+                if (radio && !radio.checked) {
+                  radio.checked = true;
+                  // Checking programmatically suppresses the native change
+                  // event, so fire it manually to refresh the button price
+                  radio.dispatchEvent(new Event('change', { bubbles: true }));
+                }
               });
             });
           });
